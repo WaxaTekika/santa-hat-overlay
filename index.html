@@ -22,7 +22,7 @@
       border: 1px solid #ccc;
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       position: relative;
-      overflow: hidden; /* Ensures that the content fits within the circle */
+      overflow: hidden;
     }
     canvas {
       display: block;
@@ -75,32 +75,20 @@
             // Clear canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Clip to a circular region
+            // Draw circular mask for transparency outside the circle
+            ctx.save(); // Save current state
             ctx.beginPath();
             ctx.arc(canvasSize / 2, canvasSize / 2, canvasSize / 2, 0, Math.PI * 2);
             ctx.closePath();
             ctx.clip();
 
-            // Calculate the scaling factor to fit the image within the 500px circle
-            const scale = Math.min(
-              canvasSize / img.width,
-              canvasSize / img.height
-            );
-            const scaledWidth = img.width * scale;
-            const scaledHeight = img.height * scale;
-            const xOffset = (canvasSize - scaledWidth) / 2;
-            const yOffset = (canvasSize - scaledHeight) / 2;
+            // Scale and center the uploaded image
+            ctx.drawImage(img, 0, 0, canvasSize, canvasSize);
 
-            // Draw the uploaded image inside the circular mask
-            ctx.drawImage(img, xOffset, yOffset, scaledWidth, scaledHeight);
+            // Draw the Santa hat overlay, ensuring it fills the circle
+            ctx.drawImage(overlayImage, 0, 0, canvasSize, canvasSize);
 
-            // Draw the Santa hat overlay on top
-            const hatWidth = scaledWidth * 0.6; // Adjust size as needed
-            const hatHeight = hatWidth * overlayImage.height / overlayImage.width;
-            const hatX = (canvasSize - hatWidth) / 2; // Center the hat
-            const hatY = yOffset - hatHeight * 0.4; // Adjust position as needed
-
-            ctx.drawImage(overlayImage, hatX, hatY, hatWidth, hatHeight);
+            ctx.restore(); // Restore clipping
 
             // Enable the download button
             downloadBtn.disabled = false;
@@ -112,9 +100,10 @@
     });
 
     downloadBtn.addEventListener('click', () => {
+      // Create a downloadable image with transparency outside the circle
       const link = document.createElement('a');
       link.download = 'circular-image-with-santa-hat.png';
-      link.href = canvas.toDataURL();
+      link.href = canvas.toDataURL('image/png'); // Ensure PNG format for transparency
       link.click();
     });
   </script>
